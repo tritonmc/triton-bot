@@ -1,0 +1,37 @@
+{
+  "name": "triton-bot",
+  "version": "1.0.0",
+  "description": "A bot to verify purchases of Triton",
+  "main": "src/index.js",
+  "repository": "git@github.com:diogotcorreia/triton-bot.git",
+  "author": "Diogo Correia <me@diogotc.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "@babel/cli": "^7.7.7",
+    "@babel/core": "^7.7.7",
+    "@babel/node": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "husky": "^3.1.0",
+    "nodemon": "^2.0.2",
+    "prettier": "^1.19.1"
+  },
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.2.0",
+    "knex": "^0.20.6",
+    "spigot-buyer-list": "^1.0.2"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon src/index.js --exec babel-node",
+    "build": "babel src -d dist",
+    "postinstall": "npm run build",
+    "format": "prettier --write src/**/*.{js,jsx}"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run format"
+    }
+  }
+}

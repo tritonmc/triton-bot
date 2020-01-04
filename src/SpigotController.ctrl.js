@@ -1,15 +1,29 @@
-//import SpigotSite from 'spigot-buyer-list';
-
-// TODO implement spigot-buyer-list
+import SpigotSite from 'spigot-buyer-list';
 
 class SpigotController {
-  constructor() {}
+  constructor() {
+    this.handler = new SpigotSite(
+      process.env.SPIGOT_USERNAME,
+      process.env.SPIGOT_PASSWORD,
+      process.env.SPIGOT_TFA_SECRET
+    );
+  }
+
+  refreshLogin() {
+    try {
+      return this.handler.loginToSpigot();
+    } catch (e) {
+      console.error('Failed to login into Spigot');
+    }
+  }
+
+  async refreshBuyers() {
+    this.buyers = await this.handler.getBuyersList(process.env.SPIGOT_RESOURCE_ID);
+    console.log(`Fetched ${this.buyers.length} buyers from Spigot!`);
+  }
 
   getBuyers() {
-    return [
-      { id: 12345, username: 'TestUser1' },
-      { id: 54321, username: 'TestUser2' },
-    ];
+    return this.buyers;
   }
 
   getBuyer(username) {

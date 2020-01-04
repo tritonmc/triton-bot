@@ -1,15 +1,18 @@
-import { Client /*, RichEmbed*/ } from 'discord.js';
+import { Client, RichEmbed } from 'discord.js';
 import 'dotenv/config';
 import DatabaseController from './DatabaseController.ctrl';
 import generateToken from './randomGenerator';
 import SpigotController from './SpigotController.ctrl';
+import cron from 'node-cron';
 
 const client = new Client();
 const databaseController = new DatabaseController();
 const spigotController = new SpigotController();
 
-client.on('ready', () => {
-  console.log('Successfuly logged in into Discord!');
+client.on('ready', async () => {
+  console.log(`Successfuly logged in into Discord as ${client.user.tag}!`);
+  await spigotController.refreshLogin();
+  refreshBuyerList();
 });
 
 client.on('message', (msg) => {
@@ -17,27 +20,11 @@ client.on('message', (msg) => {
   if (msg.channel.type === 'dm' && msg.content === '!twin') handleDM(msg);
 });
 
-/*const embed = new RichEmbed()
-    .setTitle('Get support for Triton!')
-    .setDescription(
-      'Simply write your Spigot username in this channel to get verified!\nWarning: It is case sensitive!'
-    )
-    .setColor(0x008ef9)
-    .setTimestamp()
-    .setFooter('Updates every 5 minutes. Last updated')
-    .addField(
-      "Haven't bought the plugin yet?",
-      'Buy it [here](https://www.spigotmc.org/resources/triton.30331/)!'
-    )
-    .addField(
-      'Useful links',
-      '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/docs) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
-    );*/
-
 client.login(process.env.DISCORD_TOKEN);
 
 const handleVerificationMessage = async (msg) => {
   try {
+    if (msg.author.id === client.user.id) return;
     msg.delete();
     try {
       const buyer = spigotController.getBuyer(msg.content);
@@ -96,3 +83,34 @@ const handleDM = async (msg) => {
       .catch((e) => console.error('Error while handling TWIN token request:', e));
   }
 };
+
+const refreshBuyerList = async () => {
+  try {
+    await spigotController.refreshBuyers();
+    const channel = client.channels.get(process.env.VERIFICATION_CHANNEL);
+    const embed = new RichEmbed()
+      .setTitle('Get support for Triton!')
+      .setDescription(
+        'Simply write your Spigot username in this channel to get verified!\nWarning: It is case sensitive!'
+      )
+      .setColor(0x008ef9)
+      .setTimestamp()
+      .setFooter('Updates every 5 minutes. Last updated')
+      .addField(
+        "Haven't bought the plugin yet?",
+        'Buy it [here](https://www.spigotmc.org/resources/triton.30331/)!'
+      )
+      .addField(
+        'Useful links',
+        '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/docs) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
+      );
+    const lastMessage = (await channel.fetchMessages({ limit: 1 })).first();
+    if (lastMessage && lastMessage.author.id === client.user.id) lastMessage.edit(embed);
+    else channel.send(embed);
+  } catch (e) {
+    console.error('Failed to refresh buyer list.', e);
+  }
+};
+
+cron.schedule('*/5 * * * *', refreshBuyerList);
+cron.schedule('0 0 */3 * *', spigotController.refreshLogin);

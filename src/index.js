@@ -1,13 +1,15 @@
 import { Client, RichEmbed } from 'discord.js';
 import 'dotenv/config';
+import cron from 'node-cron';
 import DatabaseController from './DatabaseController.ctrl';
 import generateToken from './randomGenerator';
+import SongodaController from './SongodaController.ctrl';
 import SpigotController from './SpigotController.ctrl';
-import cron from 'node-cron';
 
 const client = new Client();
 const databaseController = new DatabaseController();
 const spigotController = new SpigotController();
+const songodaController = new SongodaController();
 
 client.on('ready', async () => {
   console.log(`Successfuly logged in into Discord as ${client.user.tag}!`);
@@ -20,12 +22,20 @@ client.on('message', (msg) => {
   if (msg.channel.type === 'dm' && msg.content === '!twin') handleDM(msg);
 });
 
+client.on('guildMemberAdd', (member) => {
+  handleSongodaVerification(member, true);
+});
+
 client.login(process.env.DISCORD_TOKEN);
 
 const handleVerificationMessage = async (msg) => {
   try {
     if (msg.author.id === client.user.id) return;
     msg.delete();
+    if (msg.content === '!songoda') {
+      handleSongodaVerification(msg.member, false);
+      return;
+    }
     try {
       const buyer = spigotController.getBuyer(msg.content);
       if (!buyer) {
@@ -38,10 +48,7 @@ const handleVerificationMessage = async (msg) => {
         buyer.id,
         generateToken()
       );
-      await (await msg.guild.fetchMember(msg.author)).addRole(
-        process.env.BUYER_ROLE,
-        `Spigot Username: ${buyer.username}`
-      );
+      await msg.member.addRole(process.env.BUYER_ROLE, `Spigot Username: ${buyer.username}`);
       msg.author.send(
         "Verification successful! You've gained access to the support channels! :tada:\nYou can reply `!twin` in this chat to get your TWIN token at any moment."
       );
@@ -59,6 +66,53 @@ const handleVerificationMessage = async (msg) => {
     }
   } catch (e) {
     console.error('Error while handling verification message:', e);
+  }
+};
+
+const handleSongodaVerification = async (member, auto) => {
+  const buyer = songodaController.getBuyer(member.user.tag);
+  if (!buyer) {
+    if (!auto)
+      member
+        .send(`Can't find ${member.user.tag} in the buyers list! Please try again later.`)
+        .catch(console.error);
+    return;
+  }
+  try {
+    await databaseController.addUserToDatabase(
+      member.id,
+      buyer.username,
+      buyer.id,
+      generateToken()
+    );
+    await member.addRole(process.env.BUYER_ROLE, `Songoda Username: ${buyer.username}`);
+    member.send(
+      `${auto ? `Automatic v` : `V`}erification successful as \`${
+        buyer.username
+      }\`! You've gained access to the support channels! :tada:\nYou can reply \`!twin\` in this chat to get your TWIN token at any moment.`
+    );
+  } catch (e) {
+    if (e.code !== 'ER_DUP_ENTRY') {
+      console.error(
+        `An error occurred while${auto ? ` automatically` : ``} verifying a Songoda purchase`,
+        e
+      );
+      member
+        .send(
+          `You purchase has been${
+            auto ? ` automatically` : ``
+          } verified, but an error occurred while saving the changes. Please contact <@${
+            process.env.BOT_OWNER_ID
+          }>.`
+        )
+        .catch(() => {});
+      return;
+    } else if (!auto) {
+      member.send(
+        `That Songoda account has already been verified! If you think this is a mistake, please contact <@${process.env.BOT_OWNER_ID}>.`
+      );
+      return;
+    }
   }
 };
 
@@ -87,6 +141,7 @@ const handleDM = async (msg) => {
 const refreshBuyerList = async () => {
   try {
     await spigotController.refreshBuyers();
+    await songodaController.refreshBuyers();
     const channel = client.channels.get(process.env.VERIFICATION_CHANNEL);
     const embed = new RichEmbed()
       .setTitle('Get support for Triton!')
@@ -97,8 +152,12 @@ const refreshBuyerList = async () => {
       .setTimestamp()
       .setFooter('Updates every 5 minutes. Last updated')
       .addField(
+        'Bought the plugin on Songoda Marketplace?',
+        'Add your Discord tag to your Songoda profile and type `!songoda` below.'
+      )
+      .addField(
         "Haven't bought the plugin yet?",
-        'Buy it [here](https://www.spigotmc.org/resources/triton.30331/)!'
+        'Buy it on [Spigot](https://www.spigotmc.org/resources/triton.30331/)!'
       )
       .addField(
         'Useful links',

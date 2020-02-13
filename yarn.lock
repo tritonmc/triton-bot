@@ -2596,10 +2596,10 @@ speakeasy@^2.0.0:
   dependencies:
     base32.js "0.0.1"
 
-spigot-buyer-list@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/spigot-buyer-list/-/spigot-buyer-list-1.0.4.tgz#99af5e803a52d92eb7e5b2df7c9a411af7610a41"
-  integrity sha512-QJv8pzKUKbO5oLg2T6Cf92UGUWqiJ9JYU0NsSgPQrA9t4MPZr2w01zn+wVii//Nr1SCyeQs96KBTCE7w8lElvA==
+spigot-buyer-list@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/spigot-buyer-list/-/spigot-buyer-list-1.1.0.tgz#4d7e753402b0dad7db4861ae03002a7d0fcfd43f"
+  integrity sha512-33A1pADM+fULNcsP3id6TJKU8tl0VUOnSOU5JJ0zSmllWD9O8sMn2ExNAS26aOmmjV7QnR4EhHlUKo6ZRegZSQ==
   dependencies:
     axios "^0.19.0"
     qs "^6.9.1"

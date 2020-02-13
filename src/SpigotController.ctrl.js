@@ -11,6 +11,7 @@ class SpigotController {
 
   refreshLogin() {
     try {
+      this.handler.clearCookies();
       return this.handler.loginToSpigot();
     } catch (e) {
       console.error('Failed to login into Spigot');

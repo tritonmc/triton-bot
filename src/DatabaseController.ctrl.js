@@ -24,9 +24,7 @@ class DatabaseController {
   }
 
   getToken(discordId) {
-    return this.db('twin_tokens')
-      .where({ discord_id: discordId })
-      .select('token');
+    return this.db('twin_tokens').where({ discord_id: discordId }).select('token');
   }
 }
 

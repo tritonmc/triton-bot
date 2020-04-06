@@ -1,4 +1,4 @@
-import { Client, RichEmbed } from 'discord.js';
+import { Client, MessageEmbed } from 'discord.js';
 import 'dotenv/config';
 import cron from 'node-cron';
 import DatabaseController from './DatabaseController.ctrl';
@@ -48,7 +48,7 @@ const handleVerificationMessage = async (msg) => {
         buyer.id,
         generateToken()
       );
-      await msg.member.addRole(process.env.BUYER_ROLE, `Spigot Username: ${buyer.username}`);
+      await msg.member.roles.add(process.env.BUYER_ROLE, `Spigot Username: ${buyer.username}`);
       msg.author.send(
         "Verification successful! You've gained access to the support channels! :tada:\nYou can reply `!twin` in this chat to get your TWIN token at any moment."
       );
@@ -85,7 +85,7 @@ const handleSongodaVerification = async (member, auto) => {
       buyer.id,
       generateToken()
     );
-    await member.addRole(process.env.BUYER_ROLE, `Songoda Username: ${buyer.username}`);
+    await member.roles.add(process.env.BUYER_ROLE, `Songoda Username: ${buyer.username}`);
     member.send(
       `${auto ? `Automatic v` : `V`}erification successful as \`${
         buyer.username
@@ -142,8 +142,8 @@ const refreshBuyerList = async () => {
   try {
     await spigotController.refreshBuyers();
     await songodaController.refreshBuyers();
-    const channel = client.channels.get(process.env.VERIFICATION_CHANNEL);
-    const embed = new RichEmbed()
+    const channel = await client.channels.fetch(process.env.VERIFICATION_CHANNEL);
+    const embed = new MessageEmbed()
       .setTitle('Get support for Triton!')
       .setDescription(
         'Simply write your Spigot username in this channel to get verified!\nWarning: It is case sensitive!'
@@ -163,7 +163,7 @@ const refreshBuyerList = async () => {
         'Useful links',
         '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/docs) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
       );
-    const lastMessage = (await channel.fetchMessages({ limit: 1 })).first();
+    const lastMessage = (await channel.messages.fetch({ limit: 1 })).first();
     if (lastMessage && lastMessage.author.id === client.user.id) lastMessage.edit(embed);
     else channel.send(embed);
   } catch (e) {

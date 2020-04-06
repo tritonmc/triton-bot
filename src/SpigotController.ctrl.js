@@ -10,17 +10,18 @@ class SpigotController {
   }
 
   refreshLogin() {
-    try {
-      this.handler.clearCookies();
-      return this.handler.loginToSpigot();
-    } catch (e) {
-      console.error('Failed to login into Spigot');
-    }
+    return this.handler
+      .loginToSpigot()
+      .catch((e) => console.log('Failed to login into Spigot :(', e));
   }
 
   async refreshBuyers() {
-    this.buyers = await this.handler.getBuyersList(process.env.SPIGOT_RESOURCE_ID);
-    console.log(`Fetched ${this.buyers.length} buyers from Spigot!`);
+    try {
+      this.buyers = await this.handler.getBuyersList(process.env.SPIGOT_RESOURCE_ID);
+      console.log(`Fetched ${this.buyers.length} buyers from Spigot!`);
+    } catch (e) {
+      console.log('Failed to fetch buyers from Spigot :(', e);
+    }
   }
 
   getBuyers() {

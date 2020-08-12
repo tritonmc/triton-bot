@@ -26,6 +26,14 @@ class DatabaseController {
   getToken(discordId) {
     return this.db('twin_tokens').where({ discord_id: discordId }).select('token');
   }
+
+  getUserFromTag(tag) {
+    return this.db('triton_buyers').where({ discordTag: tag }).select();
+  }
+
+  getBuyer(friendlyName) {
+    return this.db('triton_buyers').where({ friendlyName }).select();
+  }
 }
 
 export default DatabaseController;

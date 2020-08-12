@@ -1,20 +1,14 @@
 import { Client, MessageEmbed } from 'discord.js';
 import 'dotenv/config';
-import cron from 'node-cron';
 import DatabaseController from './DatabaseController.ctrl';
 import generateToken from './randomGenerator';
-import SongodaController from './SongodaController.ctrl';
-import SpigotController from './SpigotController.ctrl';
 
 const client = new Client();
 const databaseController = new DatabaseController();
-const spigotController = new SpigotController();
-const songodaController = new SongodaController();
 
 client.on('ready', async () => {
   console.log(`Successfuly logged in into Discord as ${client.user.tag}!`);
-  await spigotController.refreshLogin();
-  refreshBuyerList();
+  refreshEmbed();
 });
 
 client.on('message', (msg) => {
@@ -23,7 +17,7 @@ client.on('message', (msg) => {
 });
 
 client.on('guildMemberAdd', (member) => {
-  handleSongodaVerification(member, true);
+  handleOnJoinVerification(member);
 });
 
 client.login(process.env.DISCORD_TOKEN);
@@ -32,26 +26,30 @@ const handleVerificationMessage = async (msg) => {
   try {
     if (msg.author.id === client.user.id) return;
     msg.delete();
-    if (msg.content === '!songoda') {
-      handleSongodaVerification(msg.member, false);
-      return;
-    }
     try {
-      const buyer = spigotController.getBuyer(msg.content);
-      if (!buyer) {
+      const buyerList = await databaseController.getBuyer(msg.content);
+      if (buyerList.length === 0) {
         msg.author.send(`Can't find ${msg.content} in the buyers list! Please try again later.`);
         return;
       }
+      const { marketplaceId, friendlyName, date } = buyerList[0];
       await databaseController.addUserToDatabase(
         msg.author.id,
-        buyer.username,
-        buyer.id,
+        friendlyName,
+        marketplaceId,
         generateToken()
       );
-      await msg.member.roles.add(process.env.BUYER_ROLE, `Spigot Username: ${buyer.username}`);
+      await msg.member.roles.add(process.env.BUYER_ROLE, `Spigot Username: ${friendlyName}`);
       msg.author.send(
         "Verification successful! You've gained access to the support channels! :tada:\nYou can reply `!twin` in this chat to get your TWIN token at any moment."
       );
+      client.users
+        .fetch(process.env.BOT_OWNER_ID)
+        .then((u) =>
+          u.send(
+            `User <@${msg.author.id}> has been verified as \`${friendlyName}\`. Purchase date: ${date}`
+          )
+        );
     } catch (e) {
       if (e.code === 'ER_DUP_ENTRY') {
         msg.author.send(
@@ -69,50 +67,37 @@ const handleVerificationMessage = async (msg) => {
   }
 };
 
-const handleSongodaVerification = async (member, auto) => {
-  const buyer = songodaController.getBuyer(member.user.tag);
-  if (!buyer) {
-    if (!auto)
-      member
-        .send(`Can't find ${member.user.tag} in the buyers list! Please try again later.`)
-        .catch(console.error);
+const handleOnJoinVerification = async (member) => {
+  const previousBuyer = await databaseController.getToken(member.user.id);
+  if (previousBuyer.length !== 0) {
+    await member.roles.add(process.env.BUYER_ROLE, `Guild rejoin`);
     return;
   }
+  const buyerNotGenerated = await databaseController.getUserFromTag(member.user.tag);
+  if (buyerNotGenerated.length === 0) return;
+  const { marketplaceId, friendlyName, date } = buyerNotGenerated[0];
+
   try {
     await databaseController.addUserToDatabase(
-      member.id,
-      buyer.username,
-      buyer.id,
+      member.user.id,
+      friendlyName,
+      marketplaceId,
       generateToken()
     );
-    await member.roles.add(process.env.BUYER_ROLE, `Songoda Username: ${buyer.username}`);
-    member.send(
-      `${auto ? `Automatic v` : `V`}erification successful as \`${
-        buyer.username
-      }\`! You've gained access to the support channels! :tada:\nYou can reply \`!twin\` in this chat to get your TWIN token at any moment.`
+    await member.roles.add(process.env.BUYER_ROLE, `(Auto) Spigot Username: ${friendlyName}`);
+    member.user.send(
+      "Automatic verification successful! You've gained access to the support channels! :tada:\nYou can reply `!twin` in this chat to get your TWIN token at any moment."
     );
-  } catch (e) {
-    if (e.code !== 'ER_DUP_ENTRY') {
-      console.error(
-        `An error occurred while${auto ? ` automatically` : ``} verifying a Songoda purchase`,
-        e
-      );
-      member
-        .send(
-          `You purchase has been${
-            auto ? ` automatically` : ``
-          } verified, but an error occurred while saving the changes. Please contact <@${
-            process.env.BOT_OWNER_ID
-          }>.`
+    client.users
+      .fetch(process.env.BOT_OWNER_ID)
+      .then((u) =>
+        u.send(
+          `User <@${member.user.id}> has been automatically verified as \`${friendlyName}\`. Purchase date: ${date}`
         )
-        .catch(() => {});
-      return;
-    } else if (!auto) {
-      member.send(
-        `That Songoda account has already been verified! If you think this is a mistake, please contact <@${process.env.BOT_OWNER_ID}>.`
       );
-      return;
-    }
+  } catch (e) {
+    if (e.code !== 'ER_DUP_ENTRY')
+      console.error('Error while handling verification on guild join.', e);
   }
 };
 
@@ -138,10 +123,8 @@ const handleDM = async (msg) => {
   }
 };
 
-const refreshBuyerList = async () => {
+const refreshEmbed = async () => {
   try {
-    await spigotController.refreshBuyers();
-    await songodaController.refreshBuyers();
     const channel = await client.channels.fetch(process.env.VERIFICATION_CHANNEL);
     const embed = new MessageEmbed()
       .setTitle('Get support for Triton!')
@@ -149,27 +132,23 @@ const refreshBuyerList = async () => {
         'Simply write your Spigot username in this channel to get verified!\nWarning: It is case sensitive!'
       )
       .setColor(0x008ef9)
-      .setTimestamp()
-      .setFooter('Updates every 5 minutes. Last updated')
+      .setFooter('Purchases might take a few minutes to be processed')
       .addField(
-        'Bought the plugin on Songoda Marketplace?',
-        'Add your Discord tag to your Songoda profile and type `!songoda` below.'
+        'Bought the plugin on another marketplace?',
+        "Unfortunately, automatic verification for your marketplace isn't available yet. Please DM a staff member to get verified."
       )
       .addField(
         "Haven't bought the plugin yet?",
-        'Buy it on [Spigot](https://www.spigotmc.org/resources/triton.30331/)!'
+        'Buy it on [SpigotMC](https://www.spigotmc.org/resources/triton.30331/)!'
       )
       .addField(
         'Useful links',
-        '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/docs) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
+        '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
       );
     const lastMessage = (await channel.messages.fetch({ limit: 1 })).first();
     if (lastMessage && lastMessage.author.id === client.user.id) lastMessage.edit(embed);
     else channel.send(embed);
   } catch (e) {
-    console.error('Failed to refresh buyer list.', e);
+    console.error('Failed to refresh embed.', e);
   }
 };
-
-cron.schedule('*/5 * * * *', refreshBuyerList);
-cron.schedule('0 0 */3 * *', spigotController.refreshLogin);

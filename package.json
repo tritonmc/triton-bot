@@ -14,7 +14,7 @@
     "babel-preset-latest-node": "^4.1.0",
     "husky": "^4.2.3",
     "nodemon": "^2.0.2",
-    "prettier": "^2.0.4"
+    "prettier": "^2.2.1"
   },
   "dependencies": {
     "crypto": "^1.0.1",
@@ -28,7 +28,9 @@
     "dev": "nodemon src/index.js --exec babel-node",
     "build": "babel src -d dist",
     "postinstall": "npm run build",
-    "format": "prettier --write src/**/*.{js,jsx}"
+    "format": "prettier --write \"src/**/*.{js,jsx}\"",
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback"
   },
   "husky": {
     "hooks": {

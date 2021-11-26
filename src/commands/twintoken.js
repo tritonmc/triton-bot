@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
+import logger from '../logger';
 
 export const data = new SlashCommandBuilder()
   .setName('twintoken')
@@ -24,6 +25,6 @@ export const execute = async (interaction, { databaseController }) => {
         content: `An error occurred while fetching your token. Please try again later. If the problem persists, please contact <@${process.env.BOT_OWNER_ID}>.`,
         ephemeral: true,
       })
-      .catch((e) => console.error('Error while handling TWIN token request:', e));
+      .catch((e) => logger.error(e, 'Error while handling TWIN token request:'));
   }
 };

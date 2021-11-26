@@ -1,25 +1,26 @@
 import {
   Client,
-  MessageEmbed,
-  Intents,
   Collection,
+  Intents,
   MessageActionRow,
   MessageButton,
+  MessageEmbed,
 } from 'discord.js';
 import 'dotenv/config';
-import DatabaseController from './DatabaseController.ctrl';
-import registerCommands from './registerCommands';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import DatabaseController from './DatabaseController.ctrl';
+import logger from './logger';
+import registerCommands from './registerCommands';
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 const databaseController = new DatabaseController();
 
 const loadCommands = async () => {
   client.commands = new Collection();
-  const commandFiles = (
-    await fs.promises.readdir(path.join(__dirname, 'commands'))
-  ).filter((file) => file.endsWith('.js'));
+  const commandFiles = (await fs.promises.readdir(path.join(__dirname, 'commands'))).filter(
+    (file) => file.endsWith('.js')
+  );
 
   for (const file of commandFiles) {
     const { default: command } = await import(`./commands/${file}`);
@@ -30,7 +31,7 @@ const loadCommands = async () => {
 };
 
 client.on('ready', async () => {
-  console.log(`Successfuly logged in into Discord as ${client.user.tag}!`);
+  logger.info(`Successfuly logged in into Discord as ${client.user.tag}!`);
 
   await loadCommands();
 
@@ -67,7 +68,7 @@ client.on('interactionCreate', async (interaction) => {
   try {
     await command.execute(interaction, { databaseController });
   } catch (error) {
-    console.error(error);
+    logger.error(error, 'An error occurred while handling an interaction.');
     await interaction.reply({
       content: 'There was an error while executing this command!',
       ephemeral: true,
@@ -117,6 +118,6 @@ const refreshEmbed = async () => {
       lastMessage.edit({ embeds: [embed], components: [actionRow] });
     else channel.send({ embeds: [embed], components: [actionRow] });
   } catch (e) {
-    console.error('Failed to refresh embed.', e);
+    logger.error(e, 'Failed to refresh embed.');
   }
 };

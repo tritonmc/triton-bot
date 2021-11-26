@@ -1,4 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
+import logger from '../logger';
 import generateToken from '../randomGenerator';
 
 export const data = new SlashCommandBuilder()
@@ -62,7 +63,7 @@ export const execute = async (interaction, { databaseController }) => {
       });
       return;
     }
-    console.error('Error while handling verification message.', e);
+    logger.error(e, 'Error while handling verification message.');
     interaction.reply({
       content: `An error occurred while trying to verify your purchase. Please try again later. If the problem persists, please contact <@${process.env.BOT_OWNER_ID}>.`,
       ephemeral: true,

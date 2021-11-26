@@ -15,6 +15,13 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction, { databaseController }) => {
   try {
+    if (!interaction.member) {
+      interaction.reply({
+        content: `This command must be executed in Triton's Discord server and not by DM.`,
+        ephemeral: true,
+      });
+      return;
+    }
     const username = interaction.options.getString('username');
     const buyerList = await databaseController.getBuyer(username);
     if (buyerList.length === 0) {

@@ -6,7 +6,7 @@ export const data = new SlashCommandBuilder()
 
 export const execute = async (interaction, { databaseController }) => {
   try {
-    const token = await databaseController.getToken(interaction.member.id);
+    const token = await databaseController.getToken(interaction.user.id);
     if (token.length === 0) {
       interaction.reply({
         content: `Your account isn't verified yet. Use the \`/verify\` command to get verified.`,

@@ -13,9 +13,5 @@ DISCORD_TOKEN=
 # For development of slash commands only
 GUILD_ID=
 
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=
-DB_NAME=triton
+DB_URL=postgresql:///triton?host=/run/postgresql
 ```

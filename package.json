@@ -9,7 +9,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "husky": "^7.0.2",
+    "husky": "^9.1.7",
     "nodemon": "^2.0.12",
     "pino-pretty": "^7.2.0",
     "prettier": "^2.3.2"
@@ -26,6 +26,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js | pino-pretty -c -l -t",
     "format": "prettier --write \"src/**/*.{js,jsx}\"",
+    "prepare": "husky",
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback"
   }

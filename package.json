@@ -15,7 +15,6 @@
     "prettier": "^2.3.2"
   },
   "dependencies": {
-    "crypto": "^1.0.1",
     "discord.js": "^14.25.1",
     "knex": "^0.95.10",
     "pg": "^8.13.1",

@@ -56,7 +56,8 @@ export const execute = async (interaction, { databaseController }) => {
         )
       );
   } catch (e) {
-    if (e.code === 'ER_DUP_ENTRY') {
+    if (e.code === '23505') {
+      // unique_violation
       interaction.reply({
         content: `That Spigot account has already been verified! If you think this is a mistake, please contact <@${process.env.BOT_OWNER_ID}>.`,
         flags: MessageFlags.Ephemeral,

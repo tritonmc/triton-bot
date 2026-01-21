@@ -8,6 +8,11 @@
   "license": "GPL-3.0-or-later",
   "private": true,
   "type": "module",
+  "files": [
+    "knexfile.js",
+    "migrations/*",
+    "src/*"
+  ],
   "devDependencies": {
     "husky": "^9.1.7",
     "nodemon": "^3.1.11",

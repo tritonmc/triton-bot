@@ -1,6 +1,6 @@
 {
   "name": "triton-bot",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "A bot to verify purchases of Triton",
   "main": "src/index.js",
   "repository": "git@github.com:diogotcorreia/triton-bot.git",

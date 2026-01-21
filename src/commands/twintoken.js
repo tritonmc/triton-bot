@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import logger from '../logger';
+import logger from '../logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('twintoken')

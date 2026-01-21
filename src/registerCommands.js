@@ -1,6 +1,6 @@
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import logger from './logger';
+import logger from './logger.js';
 
 const registerCommands = async (commands, { guildId, clientId, token }) => {
   try {

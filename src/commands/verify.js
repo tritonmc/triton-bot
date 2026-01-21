@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import logger from '../logger';
-import generateToken from '../randomGenerator';
+import logger from '../logger.js';
+import generateToken from '../randomGenerator.js';
 
 export const data = new SlashCommandBuilder()
   .setName('verify')

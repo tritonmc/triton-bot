@@ -9,21 +9,21 @@ import {
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import DatabaseController from './DatabaseController.ctrl';
-import logger from './logger';
-import registerCommands from './registerCommands';
+import DatabaseController from './DatabaseController.ctrl.js';
+import logger from './logger.js';
+import registerCommands from './registerCommands.js';
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
 const databaseController = new DatabaseController();
 
 const loadCommands = async () => {
   client.commands = new Collection();
-  const commandFiles = (await fs.promises.readdir(path.join(__dirname, 'commands'))).filter(
+  const commandFiles = (await fs.promises.readdir(path.join(import.meta.dirname, 'commands'))).filter(
     (file) => file.endsWith('.js')
   );
 
   for (const file of commandFiles) {
-    const { default: command } = await import(`./commands/${file}`);
+    const command = await import(`./commands/${file}`);
     // Set a new item in the Collection
     // With the key as the command name and the value as the exported module
     client.commands.set(command.data.name, command);

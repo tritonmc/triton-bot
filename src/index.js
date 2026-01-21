@@ -7,7 +7,6 @@ import {
   EmbedBuilder,
   GatewayIntentBits,
 } from 'discord.js';
-import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import DatabaseController from './DatabaseController.ctrl.js';

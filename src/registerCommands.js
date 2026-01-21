@@ -1,10 +1,9 @@
-import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v9';
+import { REST, Routes } from 'discord.js';
 import logger from './logger.js';
 
 const registerCommands = async (commands, { guildId, clientId, token }) => {
   try {
-    const rest = new REST({ version: '9' }).setToken(token);
+    const rest = new REST().setToken(token);
 
     logger.info('Started refreshing application (/) commands.');
 

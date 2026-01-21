@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import logger from '../logger.js';
 import generateToken from '../randomGenerator.js';
 
@@ -19,7 +19,7 @@ export const execute = async (interaction, { databaseController }) => {
     if (!interaction.member) {
       interaction.reply({
         content: `This command must be executed in Triton's Discord server and not by DM.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -31,7 +31,7 @@ export const execute = async (interaction, { databaseController }) => {
           '`',
           ''
         )}\` in the buyers list! Please try again later.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -46,7 +46,7 @@ export const execute = async (interaction, { databaseController }) => {
     interaction.reply({
       content:
         "Verification successful! You've gained access to the support channels! :tada:\nYou can use the `/twintoken` in this Discord server to get your TWIN token at any moment.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     interaction.client.users
       .fetch(process.env.BOT_OWNER_ID)
@@ -59,14 +59,14 @@ export const execute = async (interaction, { databaseController }) => {
     if (e.code === 'ER_DUP_ENTRY') {
       interaction.reply({
         content: `That Spigot account has already been verified! If you think this is a mistake, please contact <@${process.env.BOT_OWNER_ID}>.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
     logger.error(e, 'Error while handling verification message.');
     interaction.reply({
       content: `An error occurred while trying to verify your purchase. Please try again later. If the problem persists, please contact <@${process.env.BOT_OWNER_ID}>.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 };

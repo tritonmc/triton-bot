@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import logger from '../logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -11,19 +11,19 @@ export const execute = async (interaction, { databaseController }) => {
     if (token.length === 0) {
       interaction.reply({
         content: `Your account isn't verified yet. Use the \`/verify\` command to get verified.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
     await interaction.reply({
       content: `Your TWIN token is \`${token[0].token}\`. Please **DO NOT SHARE** it with anyone.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   } catch (e) {
     interaction
       .reply({
         content: `An error occurred while fetching your token. Please try again later. If the problem persists, please contact <@${process.env.BOT_OWNER_ID}>.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       })
       .catch((e) => logger.error(e, 'Error while handling TWIN token request:'));
   }

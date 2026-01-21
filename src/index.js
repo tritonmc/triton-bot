@@ -1,10 +1,11 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   Client,
   Collection,
-  Intents,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
+  EmbedBuilder,
+  GatewayIntentBits,
 } from 'discord.js';
 import 'dotenv/config';
 import fs from 'fs';
@@ -13,14 +14,14 @@ import DatabaseController from './DatabaseController.ctrl.js';
 import logger from './logger.js';
 import registerCommands from './registerCommands.js';
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MEMBERS] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 const databaseController = new DatabaseController();
 
 const loadCommands = async () => {
   client.commands = new Collection();
-  const commandFiles = (await fs.promises.readdir(path.join(import.meta.dirname, 'commands'))).filter(
-    (file) => file.endsWith('.js')
-  );
+  const commandFiles = (
+    await fs.promises.readdir(path.join(import.meta.dirname, 'commands'))
+  ).filter((file) => file.endsWith('.js'));
 
   for (const file of commandFiles) {
     const command = await import(`./commands/${file}`);
@@ -30,7 +31,7 @@ const loadCommands = async () => {
   }
 };
 
-client.on('ready', async () => {
+client.on('clientReady', async () => {
   logger.info(`Successfuly logged in into Discord as ${client.user.tag}!`);
 
   await loadCommands();
@@ -90,27 +91,35 @@ const refreshEmbed = async () => {
   try {
     const channel = await client.channels.fetch(process.env.VERIFICATION_CHANNEL);
 
-    const embed = new MessageEmbed()
+    const embed = new EmbedBuilder()
       .setTitle('Get support for Triton!')
       .setDescription(
         'Use the `/verify` command in this Discord server to get verified!\nWarning: It is case sensitive!'
       )
       .setColor(0x008ef9)
-      .setFooter('Purchases might take a few minutes to be processed')
-      .addField(
-        'Bought the plugin on a marketplace other than Spigot?',
-        "Unfortunately, automatic verification for your marketplace isn't available yet. Please DM a staff member to get verified."
-      )
-      .addField(
-        "Haven't bought the plugin yet?",
-        'Buy it on [SpigotMC](https://www.spigotmc.org/resources/triton.30331/) or [Polymart](https://polymart.org/resource/triton.38)!'
-      )
-      .addField(
-        'Useful links',
-        '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)'
-      );
-    const actionRow = new MessageActionRow().addComponents(
-      new MessageButton().setCustomId('twintoken').setLabel('Get TWIN token').setStyle('PRIMARY')
+      .setFooter({ text: 'Purchases might take a few minutes to be processed' })
+      .addFields([
+        {
+          name: 'Bought the plugin on a marketplace other than Spigot?',
+          value:
+            "Unfortunately, automatic verification for your marketplace isn't available yet. Please DM a staff member to get verified.",
+        },
+        {
+          name: "Haven't bought the plugin yet?",
+          value:
+            'Buy it on [SpigotMC](https://www.spigotmc.org/resources/triton.30331/) or [Polymart](https://polymart.org/resource/triton.38)!',
+        },
+        {
+          name: 'Useful links',
+          value:
+            '[SpigotMC](https://www.spigotmc.org/resources/triton.30331/) | [Documentation](https://triton.rexcantor64.com/) | [Changelog](https://www.spigotmc.org/resources/triton.30331/updates)',
+        },
+      ]);
+    const actionRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('twintoken')
+        .setLabel('Get TWIN token')
+        .setStyle(ButtonStyle.Primary)
     );
 
     const lastMessage = (await channel.messages.fetch({ limit: 1 })).first();
